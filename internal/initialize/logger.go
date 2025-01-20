@@ -6,5 +6,5 @@ import (
 )
 
 func InitLogger() {
-	global.Logger = logger.NewLogger()
+	global.Logger = logger.NewLogger(global.Config.Logger)
 }

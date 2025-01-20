@@ -9,6 +9,10 @@ mysql:
   maxIdleConns: 10   #số lượng kết nối tối đa được giữ trong pool
   maxOpenConns: 100  #số lượng kết nối tối đa mở cùng một lúc
   connMaxLifetime: 3600 # thời gian tối đa một kết nối được giữ trong pool
-
-
-
+logger:
+  log_level: debug
+  file_log_name: "./storages/logs/dev.001.log"
+  max_size:    500  #megabytes
+	max_backups: 3
+	max_age:     28   #days
+	compress:   true  #disabled by default

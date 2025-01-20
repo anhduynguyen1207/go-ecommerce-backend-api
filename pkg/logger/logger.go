@@ -3,6 +3,7 @@ package logger
 import (
 	"os"
 
+	"github.com/anhduynguyen1207/go-ecommerce-backend-api/pkg/setting"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -12,8 +13,8 @@ type LoggerZap struct {
 	*zap.Logger
 }
 
-func NewLogger() *LoggerZap {
-	logLevel := "debug"
+func NewLogger(config setting.LoggerSetting) *LoggerZap {
+	logLevel := config.Log_level
 	// debug -> info -> warn -> error -> fatal -> panic
 	var level zapcore.Level
 	switch logLevel {
@@ -30,18 +31,18 @@ func NewLogger() *LoggerZap {
 	}
 	encoder := getEncoderLog()
 	hook := lumberjack.Logger{
-		Filename:   "./storages/logs/dev.xxx.log",
-		MaxSize:    500, // megabytes
-		MaxBackups: 3,
-		MaxAge:     28,   //days
-		Compress:   true, // disabled by default
+		Filename:   config.File_log_name,
+		MaxSize:    config.Max_age, // megabytes
+		MaxBackups: config.Max_backups,
+		MaxAge:     config.Max_age,  //days
+		Compress:   config.Compress, // disabled by default
 	}
 	core := zapcore.NewCore(
 		encoder,
 		zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(&hook)),
-		zapcore.InfoLevel)
+		level)
 	// logger := zap.New(core, zap.AddCaller())
-	return &LoggerZap{zap.New(core, zap.AddCaller())}
+	return &LoggerZap{zap.New(core, zap.AddCaller(), zap.AddStacktrace(zap.ErrorLevel))}
 }
 
 // hàm custome lại fomart log theo mong muốn
