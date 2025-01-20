@@ -1,0 +1,14 @@
+server:
+  port: 8888
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  username: root
+  password: root1234
+  dbname: shopdevgo
+  maxIdleConns: 10   #số lượng kết nối tối đa được giữ trong pool
+  maxOpenConns: 100  #số lượng kết nối tối đa mở cùng một lúc
+  connMaxLifetime: 3600 # thời gian tối đa một kết nối được giữ trong pool
+
+
+
