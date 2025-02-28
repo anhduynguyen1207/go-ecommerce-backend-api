@@ -36,7 +36,7 @@ func main() {
 	// configure structure
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {
-		fmt.Println("Unable to decode configuration %v", err)
+		fmt.Printf("Unable to decode configuration %v", err)
 	}
 
 	fmt.Println("Config Port::", config.Server.Port)

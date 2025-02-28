@@ -9,23 +9,21 @@ import (
 
 func LoadConfig() {
 	viper := viper.New()
-	viper.AddConfigPath("./config/") //path to config file
-	viper.SetConfigName("local")     // name of config file
+	viper.AddConfigPath("./config/") // path to config
+	viper.SetConfigName("local")     // ten file
 	viper.SetConfigType("yaml")
 
-	// read config file
+	// read configuration
 	err := viper.ReadInConfig()
 	if err != nil {
-		panic(fmt.Errorf("Failded to red configuration %w \n", err))
+		panic(fmt.Errorf("Failed to read configuration %w \n", err))
 	}
-
-	// read value from configuration
+	// read server configuration
 	fmt.Println("Server Port::", viper.GetInt("server.port"))
-	fmt.Println("Server Security::", viper.GetString("security.jwt.key"))
+	fmt.Println("Server Port::", viper.GetString("security.jwt.key"))
 
-	// configure structure
-
+	// configure structur
 	if err := viper.Unmarshal(&global.Config); err != nil {
-		fmt.Println("Unable to decode configuration %v", err)
+		fmt.Printf("Unable to decode configuration %v", err)
 	}
 }

@@ -7,11 +7,18 @@ const (
 	ErrCodeParamInvalid = 20003 //Email is invalid
 
 	ErrInvalidToken = 30001 // Token không hợp lệ
+	ErrInvalidOTP   = 30002 // OTP không hợp lệ
+	ErrSendEmailOtp = 30003 // Gửi email OTP thất bại
+	//Reguster Code
+	ErrCodeUserHasExists = 50001 // User has already exists
 )
 
 // message
 var msg = map[int]string{
-	ErrCodeSuccess:      "Success",
-	ErrCodeParamInvalid: "Email is invalid",
-	ErrInvalidToken:     "Token is invalid",
+	ErrCodeSuccess:       "Success",
+	ErrCodeParamInvalid:  "Email is invalid",
+	ErrInvalidToken:      "Token is invalid",
+	ErrInvalidOTP:        "OTP is invalid",
+	ErrSendEmailOtp:      "Fail to send email OTP",
+	ErrCodeUserHasExists: "User has already exists",
 }
