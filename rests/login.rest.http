@@ -5,7 +5,7 @@ POST {{baseUrl}}/user/register
 Content-type: application/json
 
 {
-    "verfiy_key": "nguyenanhduy.dev@gmail.com",
+    "verify_key": "nguyenanhduy.dev@gmail.com",
     "verify_purpose": "TEST_USER",
-    "verfi_type": 1
+    "verify_type": 1
 }

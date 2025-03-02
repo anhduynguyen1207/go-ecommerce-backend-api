@@ -1,0 +1,1 @@
+https://drawsql.app/teams/tips-go/diagrams/shopdevdb

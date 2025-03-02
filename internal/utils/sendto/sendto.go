@@ -38,17 +38,17 @@ func BuildMessage(mail Mail) string {
 
 	return msg
 }
-func SendTextEmailOtp(to []string, from string, opt string) error {
+func SendTextEmailOtp(to []string, from string, otp string) error {
 	contentEmail := Mail{
 		From:    EmailAddress{Address: from, Name: "test"},
 		To:      to,
 		Subject: "OTP Verification",
-		Body:    fmt.Sprintf("Your OTP is: %s. Please enter it to verify your account.", opt),
+		Body:    fmt.Sprintf("Your OTP is %s. Please enter it to verify your account.", otp),
 	}
 
 	messageMail := BuildMessage(contentEmail)
 
-	// send smtp
+	//send smtp
 	auth := smtp.PlainAuth("", SMTPUsername, SMTPPassword, SMTPHost)
 
 	err := smtp.SendMail(SMTPHost+":587", auth, from, to, []byte(messageMail))

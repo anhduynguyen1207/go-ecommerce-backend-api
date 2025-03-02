@@ -30,7 +30,9 @@ resetse:
 sqlgen:
 	sqlc generate
 
+swag:
+	swag init -g ./cmd/server/main.go -o ./cmd/swag/docs
 
-.PHONY: dev downse upse resetse run up down
+.PHONY: dev downse upse resetse run up down swag
 
 .PHONY: air
