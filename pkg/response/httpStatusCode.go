@@ -17,17 +17,23 @@ const (
 	ErrCodeUserOtpNotExist = 60008 //OTP không tồn tại
 	//User AUthentication
 	ErrCodeLoginFail = 40005 // Login fail
+
+	//Two Factor Authentication
+	ErrCodeTwoFactorAuthSetupFailed  = 80001 // Fail to setup two factor authentication
+	ErrCodeTwoFactorAuthVerifyFailed = 80002 // Fail to setup two factor authentication
 )
 
 // message
 var msg = map[int]string{
-	ErrCodeSuccess:         "Success",
-	ErrCodeParamInvalid:    "Email is invalid",
-	ErrInvalidToken:        "Token is invalid",
-	ErrInvalidOTP:          "OTP is invalid",
-	ErrSendEmailOtp:        "Fail to send email OTP",
-	ErrCodeUserHasExists:   "User has already exists",
-	ErrCodeOtpNotExists:    "OTP is not exists but not registed",
-	ErrCodeUserOtpNotExist: "OTP is not exists",
-	ErrCodeLoginFail:       "Login fail",
+	ErrCodeSuccess:                   "Success",
+	ErrCodeParamInvalid:              "Email is invalid",
+	ErrInvalidToken:                  "Token is invalid",
+	ErrInvalidOTP:                    "OTP is invalid",
+	ErrSendEmailOtp:                  "Fail to send email OTP",
+	ErrCodeUserHasExists:             "User has already exists",
+	ErrCodeOtpNotExists:              "OTP is not exists but not registed",
+	ErrCodeUserOtpNotExist:           "OTP is not exists",
+	ErrCodeLoginFail:                 "Login fail",
+	ErrCodeTwoFactorAuthSetupFailed:  "Two Factor authentication setup failed",
+	ErrCodeTwoFactorAuthVerifyFailed: "Two Factor authentication verify failed",
 }

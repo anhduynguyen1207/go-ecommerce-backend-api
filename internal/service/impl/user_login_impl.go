@@ -33,6 +33,77 @@ func NewUserLoginImpl(r *database.Queries) *sUserLogin {
 	}
 }
 
+// ---- TWO FACTOR AUTHEN --------
+func (s *sUserLogin) IsTwoFactorEnable(ctx context.Context, userId int) (codeResult int, rs bool, err error) {
+	return 200, true, nil
+}
+
+func (s *sUserLogin) SetupTwoFactorAuth(ctx context.Context, in *model.SetupTwoFactorAuthInput) (codeResult int, err error) {
+	// Logic
+	// 1. Check isTwoFactorEnabled -> true return
+	isTwoFactorAuth, err := s.r.IsTwoFactorEnabled(ctx, in.UserId)
+	if err != nil {
+		return response.ErrCodeTwoFactorAuthSetupFailed, err
+	}
+	if isTwoFactorAuth > 0 {
+		return response.ErrCodeTwoFactorAuthSetupFailed, fmt.Errorf("Two-factor authentication is already enabled")
+	}
+	// 2. crate new type Authe
+	err = s.r.EnableTwoFactorTypeEmail(ctx, database.EnableTwoFactorTypeEmailParams{
+		UserID:            in.UserId,
+		TwoFactorAuthType: database.PreGoAccUserTwoFactor9999TwoFactorAuthTypeEMAIL,
+		TwoFactorEmail:    sql.NullString{String: in.TwoFactorEmail, Valid: true},
+	})
+	if err != nil {
+		return response.ErrCodeTwoFactorAuthSetupFailed, err
+	}
+
+	// 3. send otp to in.TwoFactorEmail
+	keyUserTwoFator := crypto.GetHash("2fa:" + strconv.Itoa(int(in.UserId)))
+	go global.Rdb.Set(ctx, keyUserTwoFator, "123456", time.Duration(consts.TIME_OTP_REGISTER)*time.Minute).Err()
+	// if err != nil {
+	// 	return response.ErrCodeTwoFactorAuthSetupFailed, err
+	// }
+	return response.ErrCodeSuccess, nil
+}
+func (s *sUserLogin) VerifyTwoFactorAuth(ctx context.Context, in *model.TwoFactorVerificationInput) (codeResult int, err error) {
+	//1. Check isTwoFactorEnable
+	isTwoFactorAuth, err := s.r.IsTwoFactorEnabled(ctx, in.UserId)
+	if err != nil {
+		return response.ErrCodeTwoFactorAuthVerifyFailed, err
+	}
+	if isTwoFactorAuth > 0 {
+		return response.ErrCodeTwoFactorAuthVerifyFailed, fmt.Errorf("Two-factor authentication is not enabled")
+	}
+	//2. Check Otp in redis avaiable
+	keyUserTwoFator := crypto.GetHash("2fa:" + strconv.Itoa(int(in.UserId)))
+	otpVerifyAuth, err := global.Rdb.Get(ctx, keyUserTwoFator).Result()
+	if err == redis.Nil {
+		return response.ErrCodeTwoFactorAuthVerifyFailed, fmt.Errorf("Key %s does not exists", keyUserTwoFator)
+	} else if err != nil {
+		return response.ErrCodeTwoFactorAuthVerifyFailed, err
+	}
+	//3. Check otp
+	if otpVerifyAuth != in.TwoFactorCode {
+		return response.ErrCodeTwoFactorAuthVerifyFailed, fmt.Errorf("OTP does not matach")
+	}
+	//4. Update status
+	err = s.r.UpdateTwoFactorStatus(ctx, database.UpdateTwoFactorStatusParams{
+		UserID:            in.UserId,
+		TwoFactorAuthType: database.PreGoAccUserTwoFactor9999TwoFactorAuthTypeEMAIL,
+	})
+	if err != nil {
+		return response.ErrCodeTwoFactorAuthVerifyFailed, err
+	}
+	//5. Remove otp
+	_, err = global.Rdb.Del(ctx, keyUserTwoFator).Result()
+	if err != nil {
+		return response.ErrCodeTwoFactorAuthVerifyFailed, err
+	}
+	return 200, nil
+}
+
+// ---- END TWO FACTOR AUTHEN ----
 func (s *sUserLogin) Login(ctx context.Context, in *model.LoginInput) (codeResult int, out model.LoginOutput, err error) {
 	// 1. logic login
 	userBase, err := s.r.GetOneUserInfo(ctx, in.UserAccount)
@@ -45,6 +116,34 @@ func (s *sUserLogin) Login(ctx context.Context, in *model.LoginInput) (codeResul
 		return response.ErrCodeLoginFail, out, fmt.Errorf("Password not match")
 	}
 	//3. check two factor authentication
+	isTwoFactorEnable, err := s.r.IsTwoFactorEnabled(ctx, uint32(userBase.UserID))
+	if err != nil {
+		return response.ErrCodeLoginFail, out, err
+	}
+	if isTwoFactorEnable > 0 {
+		//send otp to in.TwoFactorEmail
+		keyUserLoginTwoFactor := crypto.GetHash("2fa:otp:" + strconv.Itoa(int(userBase.UserID)))
+		err = global.Rdb.SetEx(ctx, keyUserLoginTwoFactor, "111111", time.Duration(consts.TIME_OTP_REGISTER)*time.Minute).Err()
+		if err != nil {
+			return response.ErrCodeLoginFail, out, fmt.Errorf("Set otp redis failed")
+		}
+		// send otp via twofactorEmail
+		// Get email để send 2fa
+		infoUserTwoFactor, err := s.r.GetTwoFactorMethodByIDAndType(ctx, database.GetTwoFactorMethodByIDAndTypeParams{
+			UserID:            uint32(userBase.UserID),
+			TwoFactorAuthType: database.PreGoAccUserTwoFactor9999TwoFactorAuthTypeEMAIL,
+		})
+		if err != nil {
+			return response.ErrCodeLoginFail, out, fmt.Errorf("get two factor method failed")
+		}
+		//go sendto.SendEmail
+		log.Println("send OTP 2FA to Email::", infoUserTwoFactor)
+		//tạm commt bởi thì ko có sever mail để gửi
+		// go sendto.SendTextEmailOtp([]string{infoUserTwoFactor.TwoFactorEmail.String}, consts.HOST_EMAIL, "111111")
+		out.Message = "send OTP 2FA to Email, pls get OTP by Email"
+		return response.ErrCodeSuccess, out, nil
+
+	}
 	//4. update password time
 	go s.r.LoginUserBase(ctx, database.LoginUserBaseParams{
 		UserLoginIp:  sql.NullString{String: "127.0.0.1", Valid: true},
@@ -66,7 +165,7 @@ func (s *sUserLogin) Login(ctx context.Context, in *model.LoginInput) (codeResul
 		return response.ErrCodeLoginFail, out, fmt.Errorf("Convert to json failed")
 	}
 	//7. Save token to redis
-	err = global.Rdb.Set(ctx, subToken, infoUserJson, time.Duration(consts.TIME_OTP_REGISTER)*time.Minute).Err()
+	err = global.Rdb.Set(ctx, subToken, infoUserJson, time.Duration(consts.TIME_2FA_OTP_REGISTER)*time.Minute).Err()
 	if err != nil {
 		return response.ErrCodeLoginFail, out, err
 	}

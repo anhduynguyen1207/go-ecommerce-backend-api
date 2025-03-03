@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/anhduynguyen1207/go-ecommerce-backend-api/internal/controller/account"
 	"github.com/anhduynguyen1207/go-ecommerce-backend-api/internal/wire"
+	middleware "github.com/anhduynguyen1207/go-ecommerce-backend-api/middlewares"
 	"github.com/gin-gonic/gin"
 )
 
@@ -30,11 +31,14 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 
 	//private
 	userRouterPrivate := Router.Group("/user")
+	userRouterPrivate.Use(middleware.AuthenMiddleware())
 	// userRouterPrivate.Use(limiter())
 	// userRouterPrivate.Use(Authen())
 	// userRouterPrivate.Use(Permission())
 	{
 		userRouterPrivate.GET("/get_info", userController.Register)
+		userRouterPrivate.POST("/two-factor/setup", account.TwoFA.SetupTwoFactorAuth)
+		userRouterPrivate.POST("/two-factor/verify", account.TwoFA.VerifyTwoFactorAuth)
 	}
 
 }

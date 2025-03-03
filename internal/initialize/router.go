@@ -3,6 +3,7 @@ package initialize
 import (
 	"github.com/anhduynguyen1207/go-ecommerce-backend-api/global"
 	"github.com/anhduynguyen1207/go-ecommerce-backend-api/internal/routers"
+	"github.com/anhduynguyen1207/go-ecommerce-backend-api/middlewares"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,6 +24,27 @@ func InitRouter() *gin.Engine {
 	// r.Use() //logging
 	// r.Use() //cross
 	// r.Use() //limiter global
+
+	r.Use(middlewares.NewRateLimiter().GlobalRateLimiter()) // 100 req/s
+	r.GET("/ping/100", func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{
+			"message": "pong 100",
+		})
+	})
+
+	r.Use(middlewares.NewRateLimiter().PublicAPIRateLimiter()) // 80 req/s
+	r.GET("/ping/80", func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{
+			"message": "pong 80",
+		})
+	})
+
+	r.Use(middlewares.NewRateLimiter().UserAndPrivateRateLimiter()) // 50 req/s
+	r.GET("/ping/50", func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{
+			"message": "pong 50",
+		})
+	})
 	managerRouter := routers.RouterGroupApp.Manager
 	userRouter := routers.RouterGroupApp.User
 
