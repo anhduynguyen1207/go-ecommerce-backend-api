@@ -5,3 +5,7 @@ GET http://localhost:8008/v1/2024/checkStatus HTTP/1.1
 ###
 GET http://localhost:8002/v1/2024/checkStatus HTTP/1.1
 
+
+
+###
+GET http://localhost:8002/v1/2024/ticket/item/1 HTTP/1.1

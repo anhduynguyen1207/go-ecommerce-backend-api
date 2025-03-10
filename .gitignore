@@ -1,0 +1,4 @@
+docs
+cmd/cli
+config/production.yaml
+environment/data/*
